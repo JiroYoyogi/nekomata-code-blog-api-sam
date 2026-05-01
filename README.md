@@ -36,4 +36,4 @@ GetArticleFunction has no authentication. Is this okay? [y/N]: y
 
 ## 補足
 
-NotionAPIKeyを環境変数で受け取ったが実務ではSSM Parameter StoreやSecrets Managerを利用する
+NotionAPIKey、AwsApiKeyを環境変数で受け取ったが実務ではSSM Parameter StoreやSecrets Managerを利用すると良い
