@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for nekomata-code-blog-api
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+
+  NotionDatabaseId:
+    Type: String
+    Default: ''
+
+  NotionApiKey:
+    Type: String
+    Default: ''
+
+  AwsApiKey:
+    Type: String
+    Default: ''
+
+Globals:
+  Function:
+    Timeout: 15
+    Runtime: nodejs24.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        NOTION_DATABASE_ID: !Ref NotionDatabaseId
+        NOTION_API_KEY: !Ref NotionApiKey
+
+Resources:
+  # HTTP APIリソースの定義
+  BlogApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub 'nekomata-code-blog-api-${Stage}'
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - x-api-key
+        AllowOrigins:
+          - '*'
+      Auth:
+        DefaultAuthorizer: LambdaAuth
+        Authorizers:
+          LambdaAuth:
+            AuthorizerPayloadFormatVersion: 2.0
+            EnableSimpleResponses: true
+            FunctionArn: !GetAtt AuthorizerFunction.Arn
+            Identity:
+              Headers:
+                - x-api-key
+
+  # 記事一覧データ取得
+  GetArticlesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'get-notion-articles-${Stage}'
+      CodeUri: src/
+      Handler: getArticles.handler
+      Events:
+        GetArticlesApi:
+          Type: HttpApi # Api から HttpApi に変更
+          Properties:
+            ApiId: !Ref BlogApi
+            Path: /api/articles
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - getArticles.ts
+
+  # 記事データ取得
+  GetArticleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'get-notion-article-${Stage}'
+      CodeUri: src/
+      Handler: getArticle.handler
+      Events:
+        GetArticleApi:
+          Type: HttpApi # Api から HttpApi に変更
+          Properties:
+            ApiId: !Ref BlogApi
+            Path: /api/articles/{id}
+            Method: get
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - getArticle.ts
+
+  # 認証用関数
+  AuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'nekomata-code-blog-api-authorizer-${Stage}'
+      CodeUri: src/
+      Handler: authorizer.handler
+      Environment:
+        Variables:
+          AWS_API_KEY: !Ref AwsApiKey
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - authorizer.ts
+
+  # API Gateway から Lambda オーソライザーを呼び出す許可
+  AuthorizerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AuthorizerFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${BlogApi}/*/*'
+
+Outputs:
+  HttpApiUrl:
+    Description: API Gateway HTTP API Endpoint URL
+    Value: !Sub 'https://${BlogApi}.execute-api.${AWS::Region}.amazonaws.com'
