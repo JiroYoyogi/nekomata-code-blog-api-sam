@@ -25,14 +25,7 @@ sam deploy --guided
 - Stage：`dev` （stgやprdなどでもOK）
 - NotionDatabaseId：`該当のNotionデータベースID`
 - NotionApiKey：`作成したアクセストークン`
-- AWSApiKey：`nekomata-code`
-
-次の質問では必ず `y` を入力
-
-```
-GetArticlesFunction has no authentication. Is this okay? [y/N]: y
-GetArticleFunction has no authentication. Is this okay? [y/N]: y
-```
+- AwsApiKey：`nekomata-code`
 
 ## 補足
 
