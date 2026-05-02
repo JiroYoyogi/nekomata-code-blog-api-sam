@@ -25,8 +25,7 @@ sam deploy --guided
 - Stage：`dev` （stgやprdなどでもOK）
 - NotionDatabaseId：`該当のNotionデータベースID`
 - NotionApiKey：`作成したアクセストークン`
-- AwsApiKey：`nekomata-code`
 
 ## 補足
 
-NotionAPIKey、AwsApiKeyを環境変数で受け取ったが実務ではSSM Parameter StoreやSecrets Managerを利用すると良い
+NotionAPIKeyを環境変数で受け取ったが実務ではSSM Parameter StoreやSecrets Managerを利用すると良い
