@@ -41,16 +41,6 @@ Resources:
           - x-api-key
         AllowOrigins:
           - '*'
-      Auth:
-        DefaultAuthorizer: LambdaAuth
-        Authorizers:
-          LambdaAuth:
-            AuthorizerPayloadFormatVersion: 2.0
-            EnableSimpleResponses: true
-            FunctionArn: !GetAtt AuthorizerFunction.Arn
-            Identity:
-              Headers:
-                - x-api-key
 
   # 記事一覧データ取得
   GetArticlesFunction:
